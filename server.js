@@ -169,12 +169,12 @@ app.get('/api/app/version', (req, res) => {
             versionCode: 2,
             downloadUrl: "https://github.com/selimqueengh-afk/SnickersChatv4/releases/latest/download/app-release.apk",
             releaseNotes: [
-                "🚀 Uygulama içi güncelleme sistemi eklendi",
-                "🎨 Şık ve modern güncelleme dialog'u",
-                "📥 Otomatik APK indirme ve kurulum",
-                "🔗 GitHub Releases entegrasyonu",
-                "🐛 Push notification sistemi iyileştirildi",
-                "⚡ Performans optimizasyonları"
+                "🖕 Siksik eklendi OHOHooho",
+                "🖕 Şaka maka bildirim geliyor artık",
+                "🖕 Sorgulama işte yükleamina",
+                "🖕 YARRRRRRRRRAK",
+                "🖕 SNİCKERSCHAT",
+                "🖕 ZenciMEEEEEEN"
             ],
             isForceUpdate: false,
             minVersion: "1.0.0"
