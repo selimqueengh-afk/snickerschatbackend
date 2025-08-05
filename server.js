@@ -24,7 +24,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// Send push notification
+// Send notification endpoint
 app.post('/api/send-notification', async (req, res) => {
   try {
     const { 
@@ -41,27 +41,21 @@ app.post('/api/send-notification', async (req, res) => {
       });
     }
 
-    // Get receiver's FCM token from RTDB (not Firestore)
-    const rtdb = admin.database();
-    console.log('DEBUG: Looking for FCM token in RTDB for user:', receiverId);
-    const fcmTokenSnapshot = await rtdb.ref(`fcm_tokens/${receiverId}`).once('value');
-    
-    console.log('DEBUG: FCM token snapshot exists:', fcmTokenSnapshot.exists());
-    
-    if (!fcmTokenSnapshot.exists()) {
-      console.log('No FCM token found in RTDB for user:', receiverId);
-      return res.status(404).json({ error: 'FCM token not found' });
-    }
-    
-    const fcmToken = fcmTokenSnapshot.val();
-    console.log('DEBUG: FCM token found:', fcmToken ? 'YES' : 'NO');
-    
-    if (!fcmToken) {
-      console.log('FCM token is null for user:', receiverId);
-      return res.status(400).json({ error: 'FCM token is null' });
+    // Get receiver's FCM token from Firestore
+    const db = admin.firestore();
+    const userDoc = await db.collection('users').doc(receiverId).get();
+
+  if (!userDoc.exists) {
+      return res.status(404).json({ error: 'User not found' });
     }
 
-    // Prepare notification message
+  const fcmToken = userDoc.data().fcmToken;
+    
+    if (!fcmToken) {
+      return res.status(400).json({ error: 'User has no FCM token' });
+    }
+
+      // Prepare notification message
     const notificationMessage = {
       notification: {
         title: senderName || 'Yeni Mesaj',
@@ -85,12 +79,10 @@ app.post('/api/send-notification', async (req, res) => {
       }
     };
 
-    console.log('DEBUG: Sending notification to FCM token:', fcmToken.substring(0, 20) + '...');
-
     // Send notification
     const response = await admin.messaging().send(notificationMessage);
 
-    console.log('Notification sent successfully:', response);
+  console.log('Notification sent successfully:', response);
     
     res.json({ 
       success: true, 
@@ -178,10 +170,10 @@ app.get('/api/app/version', (req, res) => {
             downloadUrl: "https://github.com/selimqueengh-afk/SnickersChatv4/releases/download/snickerschat1/app-debug.apk",
             releaseNotes: [
                 "🖕 Siksik eklendi OHOHooho",
-                "🖕 Şaka maka bildirim geliyor artık",
-                "🖕 Sorgulama işte yükleamina",
+                "🖕 Şakamaka bildirim geliyor artık",
+                "🖕 Sorgulama yukle isteamina",
                 "🖕 YARRRRRRRRRAK",
-                "🖕 SNİCKERSCHAT",
+                "🖕 SNİCKESCHHHAAAAT",
                 "🖕 ZenciMEEEEEEN"
             ],
             isForceUpdate: false,
@@ -203,10 +195,9 @@ app.get('/api/app/version', (req, res) => {
         });
     }
 });
-
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Snickers Chat Backend running on port ${PORT}`);
-  console.log(`📱 Health check: http://localhost:${PORT}/`);
-  console.log(`🔔 Send notification: POST http://localhost:${PORT}/api/send-notification`);
+  console.log(`ğŸš€ Snickers Chat Backend running on port ${PORT}`);
+  console.log(`ğŸ“± Health check: http://localhost:${PORT}/`);
+  console.log(`ğŸ”” Send notification: POST http://localhost:${PORT}/api/send-notification`);
 });
