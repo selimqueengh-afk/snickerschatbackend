@@ -24,7 +24,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// Send notification endpoint
+// Send push notification
 app.post('/api/send-notification', async (req, res) => {
   try {
     const { 
@@ -41,21 +41,27 @@ app.post('/api/send-notification', async (req, res) => {
       });
     }
 
-    // Get receiver's FCM token from Firestore
-    const db = admin.firestore();
-    const userDoc = await db.collection('users').doc(receiverId).get();
-
-  if (!userDoc.exists) {
-      return res.status(404).json({ error: 'User not found' });
+    // Get receiver's FCM token from RTDB (not Firestore)
+    const rtdb = admin.database();
+    console.log('DEBUG: Looking for FCM token in RTDB for user:', receiverId);
+    const fcmTokenSnapshot = await rtdb.ref(`fcm_tokens/${receiverId}`).once('value');
+    
+    console.log('DEBUG: FCM token snapshot exists:', fcmTokenSnapshot.exists());
+    
+    if (!fcmTokenSnapshot.exists()) {
+      console.log('No FCM token found in RTDB for user:', receiverId);
+      return res.status(404).json({ error: 'FCM token not found' });
     }
-
-  const fcmToken = userDoc.data().fcmToken;
+    
+    const fcmToken = fcmTokenSnapshot.val();
+    console.log('DEBUG: FCM token found:', fcmToken ? 'YES' : 'NO');
     
     if (!fcmToken) {
-      return res.status(400).json({ error: 'User has no FCM token' });
+      console.log('FCM token is null for user:', receiverId);
+      return res.status(400).json({ error: 'FCM token is null' });
     }
 
-      // Prepare notification message
+    // Prepare notification message
     const notificationMessage = {
       notification: {
         title: senderName || 'Yeni Mesaj',
@@ -79,10 +85,12 @@ app.post('/api/send-notification', async (req, res) => {
       }
     };
 
+    console.log('DEBUG: Sending notification to FCM token:', fcmToken.substring(0, 20) + '...');
+
     // Send notification
     const response = await admin.messaging().send(notificationMessage);
 
-  console.log('Notification sent successfully:', response);
+    console.log('Notification sent successfully:', response);
     
     res.json({ 
       success: true, 
@@ -195,6 +203,7 @@ app.get('/api/app/version', (req, res) => {
         });
     }
 });
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Snickers Chat Backend running on port ${PORT}`);
