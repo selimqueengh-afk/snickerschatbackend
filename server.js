@@ -42,31 +42,33 @@ app.post('/api/send-notification', async (req, res) => {
       });
     }
 
-    // Get receiver's FCM token from RTDB (not Firestore)
-    const rtdb = admin.database();
-    console.log('DEBUG: Looking for FCM token in RTDB for user:', receiverId);
-    const fcmTokenSnapshot = await rtdb.ref(`fcm_tokens/${receiverId}`).once('value');
+    // Get receiver's FCM token from Firestore (not RTDB)
+    const db = admin.firestore();
+    console.log('DEBUG: Looking for FCM token in Firestore for user:', receiverId);
+    const userDoc = await db.collection('users').doc(receiverId).get();
     
-    console.log('DEBUG: FCM token snapshot exists:', fcmTokenSnapshot.exists());
+    console.log('DEBUG: User document exists:', userDoc.exists);
     
-    if (!fcmTokenSnapshot.exists()) {
-      console.log('No FCM token found in RTDB for user:', receiverId);
-      return res.status(404).json({ error: 'FCM token not found' });
+    if (!userDoc.exists) {
+      console.log('User not found in Firestore:', receiverId);
+      return res.status(404).json({ error: 'User not found' });
     }
     
-    const fcmToken = fcmTokenSnapshot.val();
+    const userData = userDoc.data();
+    console.log('DEBUG: User data keys:', Object.keys(userData));
+    
+    const fcmToken = userData.fcmToken;
     console.log('DEBUG: FCM token found:', fcmToken ? 'YES' : 'NO');
     
     if (!fcmToken) {
-      console.log('FCM token is null for user:', receiverId);
-      return res.status(400).json({ error: 'FCM token is null' });
+      console.log('No FCM token found for user:', receiverId);
+      return res.status(404).json({ error: 'FCM token not found' });
     }
 
     // Get sender's name from Firestore if not provided
     let finalSenderName = senderName;
     if (!finalSenderName || finalSenderName === "Kullanıcı") {
       try {
-        const db = admin.firestore();
         const senderDoc = await db.collection('users').doc(senderId).get();
         if (senderDoc.exists) {
           finalSenderName = senderDoc.data().username || "Bilinmeyen";
