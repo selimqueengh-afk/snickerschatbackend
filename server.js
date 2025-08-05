@@ -12,7 +12,8 @@ app.use(express.json());
 // Initialize Firebase Admin SDK
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://snickerschat-4-default-rtdb.europe-west1.firebasedatabase.app"
 });
 
 // Health check endpoint
